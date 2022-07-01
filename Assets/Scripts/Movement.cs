@@ -8,6 +8,10 @@ public class Movement : MonoBehaviour
   [SerializeField] float rotateThrust = 100;
   [SerializeField] AudioClip mainEngine;
 
+  [SerializeField] ParticleSystem mainEngineParticles;
+  [SerializeField] ParticleSystem leftThrusterParticles;
+  [SerializeField] ParticleSystem rightThrusterParticles;
+
 
   Rigidbody rb;
   AudioSource audioSource;
@@ -24,17 +28,58 @@ public class Movement : MonoBehaviour
     ProcessRotation();
   }
 
+  void ProcessThrust()
+  {
+    if (Input.GetKey(KeyCode.Space))
+    {
+      StartThrusting();
+    }
+    else
+    {
+      StopThrusting();
+    }
+  }
+
+
   void ProcessRotation()
    {
     if (Input.GetKey(KeyCode.A))
     {
-      ApplyRotation(rotateThrust);
+      RotateLeft();
     }
     else if (Input.GetKey(KeyCode.D))
     {
-      ApplyRotation(-rotateThrust);
+      RotateRight();
     }
-   }
+    else
+    {
+      StopRotating();
+    }
+  }
+
+  private void StopRotating()
+  {
+    rightThrusterParticles.Stop();
+    leftThrusterParticles.Stop();
+  }
+
+  private void RotateRight()
+  {
+    ApplyRotation(-rotateThrust);
+    if (!leftThrusterParticles.isPlaying)
+    {
+      leftThrusterParticles.Play();
+    }
+  }
+
+  private void RotateLeft()
+  {
+    ApplyRotation(rotateThrust);
+    if (!rightThrusterParticles.isPlaying)
+    {
+      rightThrusterParticles.Play();
+    }
+  }
 
   private void ApplyRotation(float rotationThisFrame)
   {
@@ -43,16 +88,24 @@ public class Movement : MonoBehaviour
     rb.freezeRotation = false; //un-freezing rotation so the physics can take over
   }
 
-  void ProcessThrust()
+
+  void StartThrusting()
   {
-    if (Input.GetKey(KeyCode.Space))
+    rb.AddRelativeForce(Vector3.up * mainThrust * Time.deltaTime);
+    if (!audioSource.isPlaying)
     {
-      rb.AddRelativeForce(Vector3.up * mainThrust * Time.deltaTime);
-      if (!audioSource.isPlaying)
-      {
-        audioSource.PlayOneShot(mainEngine);
-      }
+      audioSource.PlayOneShot(mainEngine);
     }
-    else audioSource.Stop();
+    if (!mainEngineParticles.isPlaying)
+    {
+      mainEngineParticles.Play();
+    }
   }
+
+  private void StopThrusting()
+  {
+    audioSource.Stop();
+    mainEngineParticles.Stop();
+  }
+
 }
